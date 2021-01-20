@@ -1,4 +1,4 @@
-enum Token {
+public enum Token {
     case plus
     case minus
     case star
@@ -8,22 +8,25 @@ enum Token {
     case `let`
     case number(Float)
     case identifier(String)
+    case eof
 }
 
-enum ScanError: Error {
-    case stray_in_program
+public enum ScanError: Error {
+    case stray_in_program(Character)
     case not_a_number
 }
 
-typealias ScannerResult = Result<[Token], ScanError>
+public typealias ScannerResult = Result<[Token], ScanError>
 
-class Scanner {
-    var source: String
-    var index: String.Index
+public class Scanner {
+    private var source: String
+    private var iter: String.Iterator
+    private var curr: Character?
 
-    init(source: String) {
+    public init(source: String) {
         self.source = source
-        index = source.startIndex
+        iter = self.source.makeIterator()
+        advance()
     }
 
     public func scan() -> ScannerResult {
@@ -35,73 +38,79 @@ class Scanner {
             } else if case let .failure(fail) = res {
                 return ScannerResult.failure(fail)
             }
-            // switch res {
-            // case let .success(token):
-            //     tokens.append(token)
-            // case let .failure(fail):
-            //     return ScannerResult.failure(fail)
-            // }
         }
         return ScannerResult.success(tokens)
     }
 
     private func scanToken() -> Result<Token, ScanError> {
-        switch getCurrentChar() {
-        case "+":
-            advance()
-            return .success(Token.plus)
-        case "-":
-            advance()
-            return Result.success(Token.minus)
-        case "*":
-            advance()
-            return Result.success(Token.star)
-        case "/":
-            advance()
-            return Result.success(Token.slash)
-        case "(":
-            advance()
-            return Result.success(Token.lparen)
-        case ")":
-            advance()
-            return Result.success(Token.rparen)
-        case let c:
-            if c.isNumber {
-                return Result.success(Token.number(scanNumber()))
-            } else if c.isLetter {
-                return scanIdentifier()
+        if let char = getCurrentChar() {
+            switch char {
+            case " ", "\t", "\n":
+                advance()
+                return scanToken()
+            case "+":
+                advance()
+                return .success(Token.plus)
+            case "-":
+                advance()
+                return Result.success(Token.minus)
+            case "*":
+                advance()
+                return Result.success(Token.star)
+            case "/":
+                advance()
+                return Result.success(Token.slash)
+            case "(":
+                advance()
+                return Result.success(Token.lparen)
+            case ")":
+                advance()
+                return Result.success(Token.rparen)
+            case let char:
+                if char.isNumber {
+                    return scanNumber()
+                    // return Result.success(Token.number(scanNumber()))
+                } else if char.isLetter {
+                    return scanIdentifier()
+                }
+                return Result.failure(ScanError.stray_in_program(char))
             }
-            return Result.failure(ScanError.stray_in_program)
+        } else {
+            return Result.success(Token.eof)
         }
     }
 
-    private func scanNumber() -> Float {
+    private func scanNumber() -> Result<Token, ScanError> {
+        // TODO: Add support for float literals
         var num = 0
-        while !isAtEnd() {
-            let c = getCurrentChar()
-            if !c.isNumber {
-                break
+        while let char = getCurrentChar() {
+            if !char.isNumber {
+                if char.isWhitespace || char == "+" || char == "-" || char == "*" || char == "/" {
+                    break
+                } else {
+                    debugPrint("\(char) found")
+                    return Result.failure(.not_a_number)
+                }
             } else {
                 num *= 10
-                num += (Int(String(c)))!
+                num += (Int(String(char)))!
                 advance()
             }
         }
-        return Float(num)
+        return Result.success(Token.number(Float(num)))
     }
 
     private func scanIdentifier() -> Result<Token, ScanError> {
-        var id = ""
-        while !isAtEnd() {
-            let c = getCurrentChar()
-            if !c.isLetter {
+        var identifier = ""
+        while let char = getCurrentChar() {
+            if !char.isLetter {
                 break
             } else {
-                id.append(c)
+                identifier.append(char)
                 advance()
             }
         }
-        return Result.success(Token.identifier(id))
+        return Result.success(Token.identifier(identifier))
         // TODO:
         // let keywords = ["let": Token.`let` ]
         // if keywords.contains(id) {
@@ -111,19 +120,15 @@ class Scanner {
         // }
     }
 
-    private func getCurrentChar() -> Character {
-        return source[index]
+    private func getCurrentChar() -> Character? {
+        return curr
     }
 
     private func isAtEnd() -> Bool {
-        return index >= source.endIndex
+        return curr == nil
     }
 
     private func advance() {
-        index = source.index(index, offsetBy: 1)
-    }
-
-    private func match(char: Character) -> Bool {
-        return source[index] == char
+        curr = iter.next()
     }
 }

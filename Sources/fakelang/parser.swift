@@ -1,71 +1,68 @@
-enum Operation {
+public enum Operation {
     case add
     case sub
     case mul
     case div
 }
 
-enum UnaryOperation {
+public enum UnaryOperation {
     case add
     case sub
 }
 
-enum Expression {
+public enum Expression {
     indirect case binary(Expression, Expression, Operation)
     indirect case unary(UnaryOperation, Expression)
     case number(Float)
 }
 
-enum ParseError: Error {
-    case unexpected_token
+public enum ParseError: Error {
+    case unexpected_token(Token)
     case expected_token(String)
 }
 
-typealias ParserResult = Result<Expression, ParseError>
+public typealias ParserResult = Result<Expression, ParseError>
 
-class Parser {
+public class Parser {
     private var tokens: [Token]
     private var pos: Int
+    private var iter: Array<Token>.Iterator
+    private var curr: Token?
 
-    init(tokens: [Token]) {
+    public init(tokens: [Token]) {
         self.tokens = tokens
+        iter = self.tokens.makeIterator()
         pos = 0
+        advance()
     }
 
-    func parse() -> ParserResult {
+    public func parse() -> ParserResult {
         return expression()
     }
 
     func expression() -> ParserResult {
-        var expr: Expression
         let res = mul()
-        switch res {
-        case let .success(exprp):
-            expr = exprp
-        default:
+        guard case var .success(expr) = res else {
             return res
         }
+
         loop: while !atEnd() {
-            let tok = getCurrentToken()
+            let tok = getCurrentToken()!
             switch tok {
             case Token.plus:
                 advance()
-                let res = unary()
-                switch res {
-                case let .success(rhs):
-                    expr = Expression.binary(expr, rhs, Operation.add)
-                default:
+                let res = mul()
+                guard case let .success(rhs) = res else {
                     return res
                 }
+                expr = Expression.binary(expr, rhs, Operation.add)
             case Token.minus:
                 advance()
-                let res = unary()
-                switch res {
-                case let .success(rhs):
-                    expr = Expression.binary(expr, rhs, Operation.sub)
-                default:
+                let res = mul()
+                guard case let .success(rhs) = res else {
                     return res
                 }
+                expr = Expression.binary(expr, rhs, Operation.sub)
             default:
                 break loop
             }
@@ -75,36 +72,28 @@ class Parser {
 
     func mul() -> ParserResult {
         let res = unary()
-        var expr: Expression
 
-        switch res {
-        case let .success(exprp):
-            expr = exprp
-        default:
+        guard case var .success(expr) = res else {
             return res
         }
 
         loop: while !atEnd() {
-            let tok = getCurrentToken()
+            let tok = getCurrentToken()! // guaranteed that curr != nil
             switch tok {
             case Token.star:
                 advance()
                 let res = unary()
-                switch res {
-                case let .success(rhs):
-                    expr = Expression.binary(expr, rhs, Operation.mul)
-                default:
+                guard case let .success(rhs) = res else {
                     return res
                 }
+                expr = Expression.binary(expr, rhs, Operation.mul)
             case Token.slash:
                 advance()
                 let res = unary()
-                switch res {
-                case let .success(rhs):
-                    expr = Expression.binary(expr, rhs, Operation.mul)
-                default:
+                guard case let .success(rhs) = res else {
                     return res
                 }
+                expr = Expression.binary(expr, rhs, Operation.mul)
             default:
                 break loop
             }
@@ -116,27 +105,27 @@ class Parser {
      unary -> "-" atomic | "+" atomic | atomic
      */
     func unary() -> ParserResult {
-        switch getCurrentToken() {
-        case Token.minus:
-            advance()
-            let res = atomic()
-            switch res {
-            case let .success(atom):
+        if let token = getCurrentToken() {
+            switch token {
+            case Token.minus:
+                advance()
+                let res = atomic()
+                guard case let .success(atom) = res else {
+                    return res
+                }
                 return ParserResult.success(Expression.unary(UnaryOperation.sub, atom))
-            default:
-                return res
-            }
-        case Token.plus:
-            advance()
-            let res = atomic()
-            switch res {
-            case let .success(atom):
+            case Token.plus:
+                advance()
+                let res = atomic()
+                guard case let .success(atom) = res else {
+                    return res
+                }
                 return ParserResult.success(Expression.unary(UnaryOperation.add, atom))
             default:
-                return res
+                return atomic()
             }
-        default:
-            return atomic()
+        } else {
+            return ParserResult.failure(ParseError.expected_token("Expected unary expression"))
         }
     }
 
@@ -144,36 +133,35 @@ class Parser {
      atomic -> Number | "(" expression ")"
      */
     func atomic() -> ParserResult {
-        switch getCurrentToken() {
+        guard let token = getCurrentToken() else {
+            return ParserResult.failure(ParseError.expected_token("number or grouping expression"))
+        }
+        switch token {
         case let Token.number(num):
             advance()
             return ParserResult.success(Expression.number(num))
         case Token.lparen:
             advance()
             let ret = expression()
-            switch getCurrentToken() {
-            case Token.rparen:
-                advance()
-            default:
+            guard let token = getCurrentToken(), case Token.eof = token else {
                 return ParserResult.failure(ParseError.expected_token(")"))
             }
+            advance()
             return ret
         default:
-            return ParserResult.failure(ParseError.unexpected_token)
+            return ParserResult.failure(ParseError.unexpected_token(token))
         }
     }
 
-    private func getCurrentToken() -> Token {
-        return tokens[pos]
+    private func getCurrentToken() -> Token? {
+        return curr
     }
 
     private func atEnd() -> Bool {
-        return pos >= tokens.count
+        return curr == nil
     }
 
     private func advance() {
-        if pos < tokens.count {
-            pos += 1
-        }
+        curr = iter.next()
     }
 }

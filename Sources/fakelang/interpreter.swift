@@ -1,4 +1,9 @@
-func interpret(expr: Expression) throws -> Float {
+public enum InterpreterError: Error {
+}
+
+public typealias InterpreterResult = Result<Float, InterpreterError>
+
+public func interpret(expr: Expression) throws -> Float {
     switch expr {
     case let Expression.binary(lhs, rhs, op):
         let lhs = try interpret(expr: lhs)

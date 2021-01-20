@@ -1,27 +1,25 @@
 func repl() {
     while true {
-        print(">", terminator: " ")
+        print("> ", terminator: "")
         let line = readLine()!
 
         let scanner = Scanner(source: line)
-        let tokens = try! scanner.scan().get()
-        #if DEBUG
-            print(tokens)
-        #endif
+        let sc_res = scanner.scan()
+        guard case let .success(tokens) = sc_res else {
+            debugPrint(sc_res)
+            break
+        }
 
         let parser = Parser(tokens: tokens)
-        let expr = parser.parse()
-
-        switch expr {
-        case let .success(expr):
-            #if DEBUG
-                print(expr)
-            #endif
-            let res = try! interpret(expr: expr)
-            print(res)
-        default:
-            print("parsererror")
+        let ps_res = parser.parse()
+        guard case let .success(expr) = ps_res else {
+            debugPrint("parseerror: ", ps_res)
+            break
         }
+
+	debugPrint(expr)
+        let res = try! interpret(expr: expr)
+        print(res)
     }
 }
 
