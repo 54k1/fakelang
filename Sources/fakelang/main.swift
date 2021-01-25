@@ -1,4 +1,5 @@
 func repl() {
+    let interpreter = Interpreter()
     while true {
         print("> ", terminator: "")
         let line = readLine()!
@@ -6,7 +7,7 @@ func repl() {
         let scanner = Scanner(source: line)
         let sc_res = scanner.scan()
         guard case let .success(tokens) = sc_res else {
-            debugPrint(sc_res)
+            debugPrint("scanerror: ", sc_res)
             break
         }
 
@@ -17,8 +18,7 @@ func repl() {
             break
         }
 
-	debugPrint(expr)
-        let res = try! interpret(expr: expr)
+        let res = interpreter.interpret(stmt: expr)
         print(res)
     }
 }

@@ -1,14 +1,11 @@
 public enum Token {
-    case plus
-    case minus
-    case star
-    case slash
-    case rparen
-    case lparen
-    case `let`
-    case number(Float)
-    case identifier(String)
+    case plus, minus, star, slash
+    case lparen, rparen
+    case lbrace, rbrace
+    case `let`, fun
+    case number(Float), identifier(String)
     case eof
+    case equal
 }
 
 public enum ScanError: Error {
@@ -66,6 +63,15 @@ public class Scanner {
             case ")":
                 advance()
                 return Result.success(Token.rparen)
+            case "{":
+                advance()
+                return Result.success(Token.lbrace)
+            case "}":
+                advance()
+                return Result.success(Token.rbrace)
+            case "=":
+                advance()
+                return Result.success(Token.equal)
             case let char:
                 if char.isNumber {
                     return scanNumber()
@@ -85,12 +91,13 @@ public class Scanner {
         var num = 0
         while let char = getCurrentChar() {
             if !char.isNumber {
-                if char.isWhitespace || char == "+" || char == "-" || char == "*" || char == "/" {
-                    break
-                } else {
-                    debugPrint("\(char) found")
-                    return Result.failure(.not_a_number)
-                }
+                break
+                // if char.isWhitespace || char == "+" || char == "-" || char == "*" || char == "/" {
+                //     break
+                // } else {
+                //     debugPrint("\(char) found")
+                //     return Result.failure(.not_a_number)
+                // }
             } else {
                 num *= 10
                 num += (Int(String(char)))!
@@ -110,14 +117,12 @@ public class Scanner {
                 advance()
             }
         }
-        return Result.success(Token.identifier(identifier))
-        // TODO:
-        // let keywords = ["let": Token.`let` ]
-        // if keywords.contains(id) {
-        //         return Result.success(keywords??[id])
-        // } else {
-        //         return Result.success(Token.identifier(id))
-        // }
+        let keywords = ["let": Token.let, "fun": Token.fun]
+        if let token = keywords[identifier] {
+            return Result.success(token)
+        } else {
+            return Result.success(Token.identifier(identifier))
+        }
     }
 
     private func getCurrentChar() -> Character? {
