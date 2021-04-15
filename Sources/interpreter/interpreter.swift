@@ -1,3 +1,7 @@
+import common
+import parser
+import value
+
 public typealias InterpreterResult = Result<Value, InterpreterError>
 
 public enum InterpreterError: Error {
@@ -7,11 +11,13 @@ public enum InterpreterError: Error {
 
 public class Interpreter {
     private let env = Environment<String, Value>()
+
+    public init() {}
 }
 
 // MARK: Eval Statement
 
-extension Interpreter {
+public extension Interpreter {
     func eval(stmt: Statement) -> InterpreterResult {
         switch stmt {
         case let .declaration(decl):
@@ -25,7 +31,7 @@ extension Interpreter {
 // MARK: Eval Declaration
 
 extension Interpreter {
-    func eval(decl: Declaration) -> InterpreterResult {
+    private func eval(decl: Declaration) -> InterpreterResult {
         switch decl {
         case let .let(letDecl):
             let name = letDecl.name
@@ -43,7 +49,7 @@ extension Interpreter {
 // MARK: Eval Expression
 
 extension Interpreter {
-    func eval(expr: Expression) -> InterpreterResult {
+    private func eval(expr: Expression) -> InterpreterResult {
         switch expr {
         case let .binary(binaryExpr):
             return eval(binaryExpr: binaryExpr)
@@ -56,7 +62,7 @@ extension Interpreter {
         }
     }
 
-    func eval(binaryExpr: BinaryExpression) -> InterpreterResult {
+    private func eval(binaryExpr: BinaryExpression) -> InterpreterResult {
         let lhsRes = eval(expr: binaryExpr.lhs)
         guard case let .success(lhs) = lhsRes else {
             return lhsRes
@@ -71,6 +77,26 @@ extension Interpreter {
             return .success(lhs.add(other: rhs)!)
         default:
             fatalError("No other operation supported")
+        }
+    }
+}
+
+extension Result {
+    var ok: Success! {
+        switch self {
+        case let .success(ok):
+            return ok
+        default:
+            return nil
+        }
+    }
+
+    var err: Failure! {
+        switch self {
+        case let .failure(err):
+            return err
+        default:
+            return nil
         }
     }
 }

@@ -1,4 +1,6 @@
-public class Type {
+import scanner
+
+public class TypeAnnotation {
     let name: Token
     let params: [Token]
 

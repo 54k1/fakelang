@@ -1,10 +1,13 @@
+import common
+import scanner
+
 public enum ParseError: Error {
     case unexpected(Token)
     case expected([TokenType])
 }
 
 public typealias ParserResult = Result<Statement, ParseError>
-typealias ParseResult<T> = Result<T, ParseError>
+public typealias ParseResult<T> = Result<T, ParseError>
 
 public class Parser {
     private let tokens: [Token]
@@ -156,7 +159,7 @@ extension Parser {
         }
 
         // Type annotation present
-        var type: Type?
+        var type: TypeAnnotation?
         if match(.colon) {
             advance()
             let typeRes = parseType()
@@ -185,12 +188,12 @@ extension Parser {
 // MARK: Parse Type
 
 extension Parser {
-    private func parseType() -> ParseResult<Type> {
+    private func parseType() -> ParseResult<TypeAnnotation> {
         guard let id = consume(.identifier) else {
             return .failure(.expected([.identifier]))
         }
         // TODO: Non-simple type annotations
-        return .success(Type(name: id))
+        return .success(TypeAnnotation(name: id))
     }
 }
 
@@ -227,22 +230,22 @@ extension Parser {
     }
 }
 
-extension Result {
-    var ok: Success! {
-        switch self {
-        case let .success(ok):
-            return ok
-        default:
-            return nil
-        }
-    }
-
-    var err: Failure! {
-        switch self {
-        case let .failure(err):
-            return err
-        default:
-            return nil
-        }
-    }
-}
+// extension Result {
+//     var ok: Success! {
+//         switch self {
+//         case let .success(ok):
+//             return ok
+//         default:
+//             return nil
+//         }
+//     }
+//
+//     var err: Failure! {
+//         switch self {
+//         case let .failure(err):
+//             return err
+//         default:
+//             return nil
+//         }
+//     }
+// }

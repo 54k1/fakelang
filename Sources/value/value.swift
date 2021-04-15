@@ -3,7 +3,7 @@ public enum Value {
     case unit
 }
 
-extension Value {
+public extension Value {
     func add(other: Value) -> Value? {
         switch (self, other) {
         case let (.integer(i1), .integer(i2)):

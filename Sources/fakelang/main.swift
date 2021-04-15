@@ -1,7 +1,14 @@
+import common
+import interpreter
+import parser
+import scanner
+import value
+
 import Foundation
 
+let interpreter = Interpreter()
+
 func eval(_ source: String) {
-    let interpreter = Interpreter()
     let scanner = Scanner(source: source)
     let sc_res = scanner.scan()
     guard case let .success(tokens) = sc_res else {

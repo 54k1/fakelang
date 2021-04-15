@@ -1,3 +1,5 @@
+import scanner
+
 public indirect enum Expression {
     case binary(BinaryExpression)
     case unary(UnaryExpression)
@@ -6,8 +8,8 @@ public indirect enum Expression {
 }
 
 public class BinaryExpression {
-    let lhs, rhs: Expression
-    let op: Token
+    public let lhs, rhs: Expression
+    public let op: Token
 
     public init(lhs: Expression, rhs: Expression, op: Token) {
         self.lhs = lhs
@@ -17,8 +19,8 @@ public class BinaryExpression {
 }
 
 public class UnaryExpression {
-    let expr: Expression
-    let op: Token
+    public let expr: Expression
+    public let op: Token
 
     init(expr: Expression, op: Token) {
         self.expr = expr

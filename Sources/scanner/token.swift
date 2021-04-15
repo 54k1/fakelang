@@ -10,9 +10,9 @@ public enum TokenType: String {
 }
 
 public struct Token {
-    let type: TokenType
-    let position: TokenPosition
-    let lexeme: String?
+    public let type: TokenType
+    public let position: TokenPosition
+    public let lexeme: String?
 }
 
 public struct TokenPosition {

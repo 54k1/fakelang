@@ -1,14 +1,16 @@
+import scanner
+
 public enum Declaration {
     case `let`(LetDeclaration)
     // case function(FunctionDeclaration)
 }
 
 public class LetDeclaration {
-    let name: Token
-    let type: Type?
-    let expr: Expression
+    public let name: Token
+    public let type: TypeAnnotation?
+    public let expr: Expression
 
-    public init(name: Token, type: Type?, expr: Expression) {
+    public init(name: Token, type: TypeAnnotation?, expr: Expression) {
         self.name = name
         self.type = type
         self.expr = expr

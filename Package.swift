@@ -5,6 +5,9 @@ import PackageDescription
 
 let package = Package(
     name: "fakelang",
+	products: [
+			.executable(name: "fakelang", targets: ["fakelang"])
+	],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
@@ -14,7 +17,35 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "fakelang",
+            dependencies: ["interpreter"]
+        ),
+        .target(
+            name: "typed_ast",
             dependencies: []
+        ),
+        .target(
+            name: "analyser",
+            dependencies: ["parser", "common", "typed_ast"]
+        ),
+        .target(
+            name: "common",
+            dependencies: ["typed_ast"]
+        ),
+        .target(
+            name: "interpreter",
+            dependencies: ["common", "parser", "value"]
+        ),
+        .target(
+            name: "scanner",
+            dependencies: []
+        ),
+        .target(
+            name: "parser",
+            dependencies: ["scanner", "common"]
+        ),
+        .target(
+            name: "value",
+            dependencies: ["common"]
         ),
         .testTarget(
             name: "fakelangTests",
