@@ -1,8 +1,8 @@
 import scanner
 
 public class TypeAnnotation {
-    let name: Token
-    let params: [Token]
+    public let name: Token
+    public let params: [Token]
 
     public init(name: Token, params: [Token] = []) {
         self.name = name

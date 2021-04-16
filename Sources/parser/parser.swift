@@ -165,7 +165,7 @@ extension Parser {
         var type: TypeAnnotation?
         if match(.colon) {
             advance()
-            let typeRes = parseType()
+            let typeRes = parseTypeAnnotation()
             guard let typ = typeRes.ok else {
                 return .failure(typeRes.err)
             }
@@ -191,7 +191,7 @@ extension Parser {
 // MARK: Parse Type
 
 extension Parser {
-    private func parseType() -> ParseResult<TypeAnnotation> {
+    private func parseTypeAnnotation() -> ParseResult<TypeAnnotation> {
         guard let id = consume(.identifier) else {
             return .failure(.expected([.identifier]))
         }

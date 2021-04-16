@@ -5,13 +5,44 @@ import typed_ast
 
 public class Analyser {
     private var environment = Environment<String, Type>()
-    public init() {}
+    private let types: [String:Type]
+
+    public init() {
+        let builtinIntType: Type = .integer;
+        let builtinStringType: Type = .string
+
+        self.types = [
+            "Int": builtinIntType,
+            "String": builtinStringType
+        ];
+    }
 }
 
 public enum TypeError: Error {
     case invalidBinaryOperation(lhs: TypedASTNode, rhs: TypedASTNode, op: Token)
     case invalidUnaryOperation(op: Token, expr: TypedASTNode)
     case undefinedVariable(Token)
+    case mismatchedTypes(found: Type, expectedDueTo: Type)
+	case unknownType(TypeAnnotation)
+}
+
+extension TypeError: CustomStringConvertible {
+	public var description: String {
+		var desc = ""
+		switch self {
+		case .unknownType(let annotation):
+			desc = "Unknown Type: \(annotation.name.lexeme!)"
+		case .undefinedVariable(let token):
+			desc = "Undefined Variable: `\(token.lexeme!)` not found in this scope"
+		case .invalidBinaryOperation(let lhs, let rhs, let op):
+			desc = "Invalid Binary Operation `\(op.type.rawValue)` for \(lhs.type) and \(rhs.type)"
+		case .mismatchedTypes(let found, let expectedDueTo):
+		desc = "Mismatched Types: Expected `\(expectedDueTo)`, Found: `\(found)`"
+		default:
+			desc = "TypeError"
+		}
+		return desc
+	}
 }
 
 public typealias AnalyserResult = Result<TypedASTNode, TypeError>
@@ -101,6 +132,16 @@ public extension Analyser {
                 return .failure(exprRes.err)
             }
             let id = letDecl.name.lexeme!
+            if let typeAnnotation = letDecl.type {
+                let name = typeAnnotation.name.lexeme!
+                
+                guard let typ = types[name] else {
+					return .failure(.unknownType(typeAnnotation))
+                }
+                guard typ == typedExpr.type else {
+                    return .failure(.mismatchedTypes(found: typedExpr.type, expectedDueTo: typ))
+                }
+            }
             environment.bind(id, to: typedExpr.type)
             let decl = typed_ast.LetDeclaration(identifier: id, expr: typedExpr)
             return .success(.let(decl))
