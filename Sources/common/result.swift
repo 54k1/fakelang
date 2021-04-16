@@ -1,5 +1,5 @@
-public extension Result {
-    var ok: Success! {
+extension Result {
+    public var ok: Success! {
         switch self {
         case let .success(ok):
             return ok
@@ -8,7 +8,7 @@ public extension Result {
         }
     }
 
-    var err: Failure! {
+    public var err: Failure! {
         switch self {
         case let .failure(err):
             return err

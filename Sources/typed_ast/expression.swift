@@ -31,7 +31,9 @@ public class BinaryExpression: Expression {
         super.init(type)
     }
 
-    override public func accept<Visitor: ExpressionVisitor>(_ visitor: Visitor) -> Visitor.EvalResult {
+    override public func accept<Visitor: ExpressionVisitor>(_ visitor: Visitor)
+        -> Visitor.EvalResult
+    {
         visitor.visit(binaryExpr: self)
     }
 }
@@ -44,7 +46,9 @@ public class StringLiteralExpression: Expression {
         super.init(.string)
     }
 
-    override public func accept<Visitor: ExpressionVisitor>(_ visitor: Visitor) -> Visitor.EvalResult {
+    override public func accept<Visitor: ExpressionVisitor>(_ visitor: Visitor)
+        -> Visitor.EvalResult
+    {
         visitor.visit(stringLiteralExpr: self)
     }
 }
@@ -57,7 +61,9 @@ public class IntegerLiteralExpression: Expression {
         super.init(.integer)
     }
 
-    override public func accept<Visitor: ExpressionVisitor>(_ visitor: Visitor) -> Visitor.EvalResult {
+    override public func accept<Visitor: ExpressionVisitor>(_ visitor: Visitor)
+        -> Visitor.EvalResult
+    {
         visitor.visit(integerLiteralExpr: self)
     }
 }
@@ -70,7 +76,9 @@ public class IdentifierExpression: Expression {
         super.init(type)
     }
 
-    override public func accept<Visitor: ExpressionVisitor>(_ visitor: Visitor) -> Visitor.EvalResult {
+    override public func accept<Visitor: ExpressionVisitor>(_ visitor: Visitor)
+        -> Visitor.EvalResult
+    {
         visitor.visit(identifierExpr: self)
     }
 }

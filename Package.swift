@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "fakelang",
     products: [
-        .executable(name: "fakelang", targets: ["fakelang"]),
+        .executable(name: "fakelang", targets: ["fakelang"])
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.

@@ -66,7 +66,8 @@ extension Parser {
         while let token = getCurrentToken(), match(.plus, .minus) {
             advance()
             let res = mul()
-            guard case let .success(rhs) = res else { return res
+            guard case let .success(rhs) = res else {
+                return res
             }
             expr = Expression.binary(BinaryExpression(lhs: expr, rhs: rhs, op: token))
         }

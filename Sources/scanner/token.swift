@@ -1,11 +1,19 @@
 public enum TokenType: String {
-    case plus = "+", minus = "-", star = "*", slash = "/", bang = "!"
-    case lparen = "(", rparen = ")"
-    case lbrace = "{", rbrace = "}"
+    case plus = "+"
+    case minus = "-"
+    case star = "*"
+    case slash = "/"
+    case bang = "!"
+    case lparen = "("
+    case rparen = ")"
+    case lbrace = "{"
+    case rbrace = "}"
     case `let`, fun, `return`
     case number, identifier, string
     case eof
-    case equal = "=", colon = ":", semicolon = ";"
+    case equal = "="
+    case colon = ":"
+    case semicolon = ";"
     case comma = ","
 }
 

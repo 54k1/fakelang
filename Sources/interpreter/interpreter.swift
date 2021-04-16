@@ -17,8 +17,8 @@ public class Interpreter {
 
 // MARK: Eval Statement
 
-public extension Interpreter {
-    func eval(stmt: Statement) -> InterpreterResult {
+extension Interpreter {
+    public func eval(stmt: Statement) -> InterpreterResult {
         switch stmt {
         case let .let(decl):
             return eval(letDecl: decl)

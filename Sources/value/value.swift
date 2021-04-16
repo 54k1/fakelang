@@ -4,8 +4,8 @@ public enum Value {
     case unit
 }
 
-public extension Value {
-    func add(other: Value) -> Value? {
+extension Value {
+    public func add(other: Value) -> Value? {
         switch (self, other) {
         case let (.integer(i1), .integer(i2)):
             return .integer(i1 + i2)
@@ -14,7 +14,7 @@ public extension Value {
         }
     }
 
-    func sub(other: Value) -> Value? {
+    public func sub(other: Value) -> Value? {
         switch (self, other) {
         case let (.integer(i1), .integer(i2)):
             return .integer(i1 - i2)

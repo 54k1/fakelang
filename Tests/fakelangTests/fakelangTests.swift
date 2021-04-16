@@ -1,6 +1,8 @@
-@testable import fakelang
-import class Foundation.Bundle
 import XCTest
+
+import class Foundation.Bundle
+
+@testable import fakelang
 
 final class fakelangTests: XCTestCase {
     func testExample() throws {
@@ -63,6 +65,6 @@ final class fakelangTests: XCTestCase {
     }
 
     static var allTests = [
-        ("testExample", testExample),
+        ("testExample", testExample)
     ]
 }

@@ -1,11 +1,10 @@
+import Foundation
 import analyser
 import common
 import interpreter
 import parser
 import scanner
 import value
-
-import Foundation
 
 let interpreter = Interpreter()
 let analyser = Analyser()

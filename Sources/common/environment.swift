@@ -4,12 +4,12 @@ public class Environment<K: Hashable, V> {
     public init() {}
 }
 
-public extension Environment {
-    func get(_ key: K) -> V? {
+extension Environment {
+    public func get(_ key: K) -> V? {
         dict[key]
     }
 
-    func bind(_ key: K, to value: V) {
+    public func bind(_ key: K, to value: V) {
         dict[key] = value
     }
 }

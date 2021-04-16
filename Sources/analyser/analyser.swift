@@ -5,16 +5,16 @@ import typed_ast
 
 public class Analyser {
     private var environment = Environment<String, Type>()
-    private let types: [String:Type]
+    private let types: [String: Type]
 
     public init() {
-        let builtinIntType: Type = .integer;
+        let builtinIntType: Type = .integer
         let builtinStringType: Type = .string
 
         self.types = [
             "Int": builtinIntType,
-            "String": builtinStringType
-        ];
+            "String": builtinStringType,
+        ]
     }
 }
 
@@ -23,26 +23,26 @@ public enum TypeError: Error {
     case invalidUnaryOperation(op: Token, expr: TypedASTNode)
     case undefinedVariable(Token)
     case mismatchedTypes(found: Type, expectedDueTo: Type)
-	case unknownType(TypeAnnotation)
+    case unknownType(TypeAnnotation)
 }
 
 extension TypeError: CustomStringConvertible {
-	public var description: String {
-		var desc = ""
-		switch self {
-		case .unknownType(let annotation):
-			desc = "Unknown Type: \(annotation.name.lexeme!)"
-		case .undefinedVariable(let token):
-			desc = "Undefined Variable: `\(token.lexeme!)` not found in this scope"
-		case .invalidBinaryOperation(let lhs, let rhs, let op):
-			desc = "Invalid Binary Operation `\(op.type.rawValue)` for \(lhs.type) and \(rhs.type)"
-		case .mismatchedTypes(let found, let expectedDueTo):
-		desc = "Mismatched Types: Expected `\(expectedDueTo)`, Found: `\(found)`"
-		default:
-			desc = "TypeError"
-		}
-		return desc
-	}
+    public var description: String {
+        var desc = ""
+        switch self {
+        case .unknownType(let annotation):
+            desc = "Unknown Type: \(annotation.name.lexeme!)"
+        case .undefinedVariable(let token):
+            desc = "Undefined Variable: `\(token.lexeme!)` not found in this scope"
+        case .invalidBinaryOperation(let lhs, let rhs, let op):
+            desc = "Invalid Binary Operation `\(op.type.rawValue)` for \(lhs.type) and \(rhs.type)"
+        case .mismatchedTypes(let found, let expectedDueTo):
+            desc = "Mismatched Types: Expected `\(expectedDueTo)`, Found: `\(found)`"
+        default:
+            desc = "TypeError"
+        }
+        return desc
+    }
 }
 
 public typealias AnalyserResult = Result<TypedASTNode, TypeError>
@@ -89,7 +89,8 @@ extension Analyser {
         case .plus:
             switch (lhs.type, rhs.type) {
             case (.integer, .integer):
-                let typedExpr = typed_ast.BinaryExpression(lhs: lhs, rhs: rhs, op: .add, type: .integer)
+                let typedExpr = typed_ast.BinaryExpression(
+                    lhs: lhs, rhs: rhs, op: .add, type: .integer)
                 return .success(typedExpr)
             default:
                 return .failure(.invalidBinaryOperation(lhs: lhs, rhs: rhs, op: binaryExpr.op))
@@ -120,8 +121,8 @@ extension Analyser {
 
 // MARK: Analyse Statement
 
-public extension Analyser {
-    func analyse(stmt: parser.Statement) -> StatementAnalyserResult {
+extension Analyser {
+    public func analyse(stmt: parser.Statement) -> StatementAnalyserResult {
         switch stmt {
         case let .declaration(decl):
             guard case let .let(letDecl) = decl else {
@@ -134,9 +135,9 @@ public extension Analyser {
             let id = letDecl.name.lexeme!
             if let typeAnnotation = letDecl.type {
                 let name = typeAnnotation.name.lexeme!
-                
+
                 guard let typ = types[name] else {
-					return .failure(.unknownType(typeAnnotation))
+                    return .failure(.unknownType(typeAnnotation))
                 }
                 guard typ == typedExpr.type else {
                     return .failure(.mismatchedTypes(found: typedExpr.type, expectedDueTo: typ))
@@ -156,8 +157,8 @@ public extension Analyser {
     }
 }
 
-private extension Int {
-    init?(from token: Token) {
+extension Int {
+    fileprivate init?(from token: Token) {
         guard let lexeme = token.lexeme else {
             return nil
         }
