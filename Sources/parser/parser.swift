@@ -125,6 +125,9 @@ extension Parser {
         case .number:
             advance()
             return .success(.number(token))
+        case .string:
+            advance()
+            return .success(.string(token))
         case .lparen:
             return parseGroupingExpr()
         case .identifier:
@@ -229,23 +232,3 @@ extension Parser {
         curr = iter.next()
     }
 }
-
-// extension Result {
-//     var ok: Success! {
-//         switch self {
-//         case let .success(ok):
-//             return ok
-//         default:
-//             return nil
-//         }
-//     }
-//
-//     var err: Failure! {
-//         switch self {
-//         case let .failure(err):
-//             return err
-//         default:
-//             return nil
-//         }
-//     }
-// }

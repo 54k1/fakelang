@@ -4,6 +4,7 @@ public indirect enum Expression {
     case binary(BinaryExpression)
     case unary(UnaryExpression)
     case number(Token)
+    case string(Token)
     case identifier(Token)
 }
 

@@ -44,6 +44,8 @@ public final class Scanner {
         case "=":
             advance()
             return .success(makeToken(.equal))
+        case "\"":
+            return scanStringLiteral()
         case let char:
             if char.isNumber {
                 return scanNumber()
@@ -118,5 +120,21 @@ extension Scanner {
     func makeToken(_ type: TokenType, lexeme: String? = nil) -> Token {
         let position = TokenPosition(column: column, line: line)
         return Token(type: type, position: position, lexeme: lexeme)
+    }
+}
+
+extension Scanner {
+    private func scanStringLiteral() -> Result<Token, ScanError> {
+        var string = ""
+        advance()
+        while let char = getCurrentChar() {
+            if char == "\"" {
+                break
+            }
+            string.append(char)
+            advance()
+        }
+        advance()
+        return .success(makeToken(.string, lexeme: string))
     }
 }

@@ -1,4 +1,4 @@
 public enum Statement {
-	case `let`(LetDeclaration)
-	case expression(Expression)
+    case `let`(LetDeclaration)
+    case expression(Expression)
 }

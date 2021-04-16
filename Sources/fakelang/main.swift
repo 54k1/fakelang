@@ -1,3 +1,4 @@
+import analyser
 import common
 import interpreter
 import parser
@@ -7,6 +8,7 @@ import value
 import Foundation
 
 let interpreter = Interpreter()
+let analyser = Analyser()
 
 func eval(_ source: String) {
     let scanner = Scanner(source: source)
@@ -23,7 +25,13 @@ func eval(_ source: String) {
         return
     }
 
-    let res = interpreter.eval(stmt: expr)
+    let a_res = analyser.analyse(stmt: expr)
+    guard let typedStmt = a_res.ok else {
+        debugPrint(a_res.err!)
+        return
+    }
+
+    let res = interpreter.eval(stmt: typedStmt)
     print(res)
 }
 

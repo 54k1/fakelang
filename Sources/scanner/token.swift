@@ -3,7 +3,7 @@ public enum TokenType: String {
     case lparen = "(", rparen = ")"
     case lbrace = "{", rbrace = "}"
     case `let`, fun, `return`
-    case number, identifier
+    case number, identifier, string
     case eof
     case equal = "=", colon = ":", semicolon = ";"
     case comma = ","

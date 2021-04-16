@@ -1,5 +1,5 @@
 import common
-import parser
+import typed_ast
 import value
 
 public typealias InterpreterResult = Result<Value, InterpreterError>
@@ -20,8 +20,8 @@ public class Interpreter {
 public extension Interpreter {
     func eval(stmt: Statement) -> InterpreterResult {
         switch stmt {
-        case let .declaration(decl):
-            return eval(decl: decl)
+        case let .let(decl):
+            return eval(letDecl: decl)
         case let .expression(expr):
             return eval(expr: expr)
         }
@@ -31,35 +31,58 @@ public extension Interpreter {
 // MARK: Eval Declaration
 
 extension Interpreter {
-    private func eval(decl: Declaration) -> InterpreterResult {
-        switch decl {
-        case let .let(letDecl):
-            let name = letDecl.name
-            let expr = letDecl.expr
-            let exprRes = eval(expr: expr)
-            guard let val = exprRes.ok else {
-                return .failure(exprRes.err)
-            }
-            env.bind(name.lexeme!, to: val)
-            return .success(.unit)
+    private func eval(letDecl: LetDeclaration) -> InterpreterResult {
+        let name = letDecl.identifier
+        let expr = letDecl.expr
+        let exprRes = eval(expr: expr)
+        guard let val = exprRes.ok else {
+            return .failure(exprRes.err)
         }
+        env.bind(name, to: val)
+        return .success(.unit)
     }
 }
 
 // MARK: Eval Expression
 
+extension Interpreter: ExpressionVisitor {
+    public typealias EvalResult = InterpreterResult
+
+    public func visit(expr _: typed_ast.Expression) -> EvalResult {
+        fatalError("Trying to eval expression")
+    }
+
+    public func visit(binaryExpr: typed_ast.BinaryExpression) -> EvalResult {
+        eval(binaryExpr: binaryExpr)
+    }
+
+    public func visit(stringLiteralExpr expr: typed_ast.StringLiteralExpression) -> EvalResult {
+        return .success(.string(expr.literal))
+    }
+
+    public func visit(integerLiteralExpr: typed_ast.IntegerLiteralExpression) -> EvalResult {
+        return .success(.integer(integerLiteralExpr.literal))
+    }
+
+    public func visit(identifierExpr: IdentifierExpression) -> EvalResult {
+        return .success(env.get(identifierExpr.identifier)!)
+    }
+}
+
 extension Interpreter {
     private func eval(expr: Expression) -> InterpreterResult {
-        switch expr {
-        case let .binary(binaryExpr):
-            return eval(binaryExpr: binaryExpr)
-        case let .number(token):
-            return .success(.integer(Int(token.lexeme!)!))
-        case let .identifier(token):
-            return .success(env.get(token.lexeme!)!)
-        default:
-            fatalError("Expr not supported")
-        }
+        expr.accept(self)
+        // self.visit(expr)
+        // switch expr {
+        // case let .binary(binaryExpr):
+        //     return eval(binaryExpr: binaryExpr)
+        // case let .number(token):
+        //     return .success(.integer(Int(token.lexeme!)!))
+        // case let .identifier(token):
+        //     return .success(env.get(token.lexeme!)!)
+        // default:
+        //     fatalError("Expr not supported")
+        // }
     }
 
     private func eval(binaryExpr: BinaryExpression) -> InterpreterResult {
@@ -72,31 +95,11 @@ extension Interpreter {
             return rhsRes
         }
 
-        switch binaryExpr.op.type {
-        case .plus, .minus:
+        switch binaryExpr.op {
+        case .add, .sub:
             return .success(lhs.add(other: rhs)!)
         default:
             fatalError("No other operation supported")
-        }
-    }
-}
-
-extension Result {
-    var ok: Success! {
-        switch self {
-        case let .success(ok):
-            return ok
-        default:
-            return nil
-        }
-    }
-
-    var err: Failure! {
-        switch self {
-        case let .failure(err):
-            return err
-        default:
-            return nil
         }
     }
 }

@@ -1,5 +1,6 @@
 public enum Value {
     case integer(Int)
+    case string(String)
     case unit
 }
 
