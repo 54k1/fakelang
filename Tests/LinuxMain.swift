@@ -1,6 +1,8 @@
+import ScannerTests
 import XCTest
-import learn_swiftTests
+import fakelangTests
 
 var tests = [XCTestCaseEntry]()
-tests += learn_swiftTests.allTests()
+tests += fakelangTests.allTests()
+tests += ScannerTests.allTests()
 XCTMain(tests)

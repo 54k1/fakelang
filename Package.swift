@@ -51,5 +51,9 @@ let package = Package(
             name: "fakelangTests",
             dependencies: ["fakelang"]
         ),
+        .testTarget(
+            name: "ScannerTests",
+            dependencies: ["scanner"]
+        ),
     ]
 )

@@ -1,12 +1,20 @@
 import XCTest
 
 import class Foundation.Bundle
+import class analyser.Analyser
+import class interpreter.Interpreter
+import class parser.Parser
+import class scanner.Scanner
+import enum value.Value
 
 @testable import fakelang
 
 final class fakelangTests: XCTestCase {
+    private let interpreter = Interpreter()
+    private let analyser = Analyser()
+
     func testExample() throws {
-        let source = "1*12+90"
+        let source = "12+"
         let scanner = Scanner(source: source)
         let sc_res = scanner.scan()
         guard case let .success(tokens) = sc_res else {
@@ -14,18 +22,26 @@ final class fakelangTests: XCTestCase {
             return
         }
 
-        let parser = fakelang.Parser(tokens: tokens)
+        let parser = Parser(tokens: tokens)
         let ps_res = parser.parse()
-        guard case let .success(expr) = ps_res else {
+        guard case let .success(stmt) = ps_res else {
             debugPrint("parseerror: ", ps_res)
+            throw ps_res.err!
+        }
+
+        let analyserRes = analyser.analyse(stmt: stmt)
+        guard let typedStmt = analyserRes.ok else {
+            debugPrint(analyserRes.err!)
             return
         }
 
-        debugPrint(expr)
-        let interpreter = Interpreter()
-        let res = interpreter.eval(expr: expr)
+        let interpreterRes = interpreter.eval(stmt: typedStmt)
+        guard let res = interpreterRes.ok else {
+            debugPrint(interpreterRes.err!)
+            return
+        }
 
-        XCTAssertEqual(try? res.get(), Value.integer(12))
+        XCTAssertEqual(res, Value.integer(12))
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct
         // results.
