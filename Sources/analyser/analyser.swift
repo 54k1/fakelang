@@ -87,14 +87,9 @@ extension Analyser {
 
         switch binaryExpr.op.type {
         case .plus:
-            switch (lhs.type, rhs.type) {
-            case (.integer, .integer):
-                let typedExpr = typed_ast.BinaryExpression(
-                    lhs: lhs, rhs: rhs, op: .add, type: .integer)
-                return .success(typedExpr)
-            default:
-                return .failure(.invalidBinaryOperation(lhs: lhs, rhs: rhs, op: binaryExpr.op))
-            }
+            return analysePlus(lhs: lhs, rhs: rhs, op: binaryExpr.op)
+        case .minus:
+            return analyseMinus(lhs: lhs, rhs: rhs, op: binaryExpr.op)
         default:
             fatalError("Not a binaryExpr. Setting a wrong token in parser?")
         }
@@ -154,6 +149,64 @@ extension Analyser {
             let stmt = typed_ast.Statement.expression(typedExpr)
             return .success(stmt)
         }
+    }
+}
+
+// MARK: Operators
+
+extension Analyser {
+    private func analysePlus(lhs: typed_ast.Expression, rhs: typed_ast.Expression, op: Token)
+        -> ExpressionAnalyserResult
+    {
+        assert(op.type == .plus, "Expected `+` operator, got \(op.type.rawValue)")
+
+        var type: Type?
+        switch (lhs.type, rhs.type) {
+        case (.integer, .integer):
+            type = .integer
+        case (.string, .string):
+            type = .string
+        default:
+            type = nil
+        }
+
+        guard let typ = type else {
+            return .failure(.invalidBinaryOperation(lhs: lhs, rhs: rhs, op: op))
+        }
+
+        return .success(typed_ast.BinaryExpression(lhs: lhs, rhs: rhs, op: .add, type: typ))
+    }
+
+    private func analyseMinus(lhs: typed_ast.Expression, rhs: typed_ast.Expression, op: Token)
+        -> ExpressionAnalyserResult
+    {
+
+        var result: (Type, BinaryOperator)?
+        switch (lhs.type, rhs.type) {
+        case (.integer, .integer):
+            result = (.integer, .sub)
+        default:
+            result = nil
+        }
+
+        return analyseOperator(.minus, result: result, lhs: lhs, rhs: rhs, op: op)
+    }
+
+    private func analyseOperator(
+        _ oper: TokenType, result: (type: Type, op: BinaryOperator)?, lhs: typed_ast.Expression,
+        rhs: typed_ast.Expression,
+        op: Token
+    ) -> ExpressionAnalyserResult {
+
+        assert(op.type == oper, "Expected `\(oper.rawValue)` operator, got \(op.type.rawValue)")
+
+        guard let result = result else {
+            return .failure(.invalidBinaryOperation(lhs: lhs, rhs: rhs, op: op))
+        }
+
+        let (type, binOp) = result
+
+        return .success(typed_ast.BinaryExpression(lhs: lhs, rhs: rhs, op: binOp, type: type))
     }
 }
 

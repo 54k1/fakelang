@@ -1,4 +1,4 @@
 public enum Type {
     // Literal
-    case integer, string
+    case integer, string, unit
 }

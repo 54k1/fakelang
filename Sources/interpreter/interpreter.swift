@@ -96,8 +96,10 @@ extension Interpreter {
         }
 
         switch binaryExpr.op {
-        case .add, .sub:
+        case .add:
             return .success(lhs.add(other: rhs)!)
+        case .sub:
+            return .success(lhs.sub(other: rhs)!)
         default:
             fatalError("No other operation supported")
         }

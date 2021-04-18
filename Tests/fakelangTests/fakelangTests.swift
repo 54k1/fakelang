@@ -14,7 +14,7 @@ final class fakelangTests: XCTestCase {
     private let analyser = Analyser()
 
     func testExample() throws {
-        let source = "12+"
+        let source = "12"
         let scanner = Scanner(source: source)
         let sc_res = scanner.scan()
         guard case let .success(tokens) = sc_res else {
