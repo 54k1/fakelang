@@ -5,6 +5,7 @@ import typed_ast
 
 public class Analyser {
     private var environment = Environment<String, Type>()
+    private var scopeChain = [Scope()]
     private let types: [String: Type]
 
     public init() {
@@ -18,33 +19,6 @@ public class Analyser {
     }
 }
 
-public enum TypeError: Error {
-    case invalidBinaryOperation(lhs: TypedASTNode, rhs: TypedASTNode, op: Token)
-    case invalidUnaryOperation(op: Token, expr: TypedASTNode)
-    case undefinedVariable(Token)
-    case mismatchedTypes(found: Type, expectedDueTo: Type)
-    case unknownType(TypeAnnotation)
-}
-
-extension TypeError: CustomStringConvertible {
-    public var description: String {
-        var desc = ""
-        switch self {
-        case .unknownType(let annotation):
-            desc = "Unknown Type: \(annotation.name.lexeme!)"
-        case .undefinedVariable(let token):
-            desc = "Undefined Variable: `\(token.lexeme!)` not found in this scope"
-        case .invalidBinaryOperation(let lhs, let rhs, let op):
-            desc = "Invalid Binary Operation `\(op.type.rawValue)` for \(lhs.type) and \(rhs.type)"
-        case .mismatchedTypes(let found, let expectedDueTo):
-            desc = "Mismatched Types: Expected `\(expectedDueTo)`, Found: `\(found)`"
-        default:
-            desc = "TypeError"
-        }
-        return desc
-    }
-}
-
 public typealias AnalyserResult = Result<TypedASTNode, TypeError>
 public typealias ExpressionAnalyserResult = Result<typed_ast.Expression, TypeError>
 public typealias StatementAnalyserResult = Result<typed_ast.Statement, TypeError>
@@ -54,23 +28,26 @@ public typealias StatementAnalyserResult = Result<typed_ast.Statement, TypeError
 extension Analyser {
     private func analyse(expr: parser.Expression) -> ExpressionAnalyserResult {
         switch expr {
-        case let .number(token):
+        case .number(let token):
             let num = Int(from: token)!
-            let typedExpr = typed_ast.IntegerLiteralExpression(num)
+            let typedExpr = typed_ast.IntegerLiteralExpression(num, token)
             return .success(typedExpr)
-        case let .string(token):
+        case .string(let token):
             let lexeme = token.lexeme!
-            let typedExpr = typed_ast.StringLiteralExpression(lexeme)
+            let typedExpr = typed_ast.StringLiteralExpression(lexeme, token)
             return .success(typedExpr)
-        case let .binary(binaryExpr):
+        case .binary(let binaryExpr):
             return analyse(binaryExpr: binaryExpr)
-        case let .unary(unaryExpr):
+        case .unary(let unaryExpr):
             return analyse(unaryExpr: unaryExpr)
-        case let .identifier(id):
-            guard let type = environment.get(id.lexeme!) else {
+        case .identifier(let id):
+            guard let (type, decl) = getBinding(for: id.lexeme!) else {
                 return .failure(.undefinedVariable(id))
             }
-            let typedExpr = typed_ast.IdentifierExpression(id.lexeme!, type: type)
+            guard case .let(_) = decl else {
+                return .failure(.undefinedVariable(id))
+            }
+            let typedExpr = typed_ast.IdentifierExpression(id, type: type)
             return .success(typedExpr)
         }
     }
@@ -106,7 +83,7 @@ extension Analyser {
             guard case .integer = expr.type else {
                 return .failure(.invalidUnaryOperation(op: unaryExpr.op, expr: expr))
             }
-            let typedExpr = typed_ast.IntegerLiteralExpression(12)
+            let typedExpr = typed_ast.IntegerLiteralExpression(12, expr.token)
             return .success(typedExpr)
         default:
             fatalError("Not a unaryExpr. Setting a wrong token in parser?")
@@ -119,29 +96,12 @@ extension Analyser {
 extension Analyser {
     public func analyse(stmt: parser.Statement) -> StatementAnalyserResult {
         switch stmt {
-        case let .declaration(decl):
+        case .declaration(let decl):
             guard case let .let(letDecl) = decl else {
                 fatalError("Decl not supported")
             }
-            let exprRes = analyse(expr: letDecl.expr)
-            guard let typedExpr = exprRes.ok else {
-                return .failure(exprRes.err)
-            }
-            let id = letDecl.name.lexeme!
-            if let typeAnnotation = letDecl.type {
-                let name = typeAnnotation.name.lexeme!
-
-                guard let typ = types[name] else {
-                    return .failure(.unknownType(typeAnnotation))
-                }
-                guard typ == typedExpr.type else {
-                    return .failure(.mismatchedTypes(found: typedExpr.type, expectedDueTo: typ))
-                }
-            }
-            environment.bind(id, to: typedExpr.type)
-            let decl = typed_ast.LetDeclaration(identifier: id, expr: typedExpr)
-            return .success(.let(decl))
-        case let .expression(expr):
+            return self.analyse(letDecl: letDecl)
+        case .expression(let expr):
             let exprRes = analyse(expr: expr)
             guard let typedExpr = exprRes.ok else {
                 return .failure(exprRes.err)
@@ -149,6 +109,51 @@ extension Analyser {
             let stmt = typed_ast.Statement.expression(typedExpr)
             return .success(stmt)
         }
+    }
+
+    private func analyse(letDecl: parser.LetDeclaration) -> StatementAnalyserResult {
+        let name = letDecl.name
+        let mut = letDecl.mut
+        let expr = letDecl.expr
+        let typeAnnotation = letDecl.type
+
+        let exprRes = self.analyse(expr: expr)
+        guard let typedExpr = exprRes.ok else {
+            return .failure(exprRes.err)
+        }
+
+        var type: Type!
+
+        if let typeAnnotation = typeAnnotation {
+            let typeRes = analyse(typeAnnotation: typeAnnotation)
+            guard let ty = typeRes.ok else {
+                return .failure(typeRes.err)
+            }
+            guard ty == typedExpr.type else {
+                return .failure(
+                    .mismatchedTypes(
+                        found: typedExpr.type, at: typedExpr.token, expected: ty,
+                        dueTo: typeAnnotation.name))
+            }
+            type = ty
+        } else {
+            type = typedExpr.type
+        }
+
+        let decl = typed_ast.LetDeclaration(
+            name: name, typeAnnotation: typeAnnotation, mut: mut, expr: typedExpr)
+
+        self.setBinding(decl.identifier, type, .let(decl))
+
+        return .success(.let(decl))
+    }
+
+    private func analyse(typeAnnotation annotation: TypeAnnotation) -> Result<Type, TypeError> {
+        if let type = self.types[annotation.name.lexeme!] {
+            return .success(type)
+        }
+
+        return .failure(.unknownType(annotation))
     }
 }
 
@@ -207,6 +212,21 @@ extension Analyser {
         let (type, binOp) = result
 
         return .success(typed_ast.BinaryExpression(lhs: lhs, rhs: rhs, op: binOp, type: type))
+    }
+}
+
+// MARK: Scope
+
+extension Analyser {
+    private func setBinding(_ name: String, _ type: Type, _ decl: typed_ast.Declaration) {
+        self.scopeChain.last?.setBinding(name, type, decl)
+    }
+
+    private func getBinding(for name: String) -> (Type, typed_ast.Declaration)? {
+        if let binding = self.scopeChain.last?.getBinding(for: name) {
+            return (binding.type, binding.dueTo)
+        }
+        return nil
     }
 }
 

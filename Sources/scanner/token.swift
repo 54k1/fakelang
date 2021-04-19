@@ -8,7 +8,7 @@ public enum TokenType: String {
     case rparen = ")"
     case lbrace = "{"
     case rbrace = "}"
-    case `let`, fun, `return`
+    case `let`, fun, `return`, mut
     case number, identifier, string
     case eof
     case equal = "="

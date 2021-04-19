@@ -7,11 +7,13 @@ public enum Declaration {
 
 public class LetDeclaration {
     public let name: Token
+    public let mut: Token?
     public let type: TypeAnnotation?
     public let expr: Expression
 
-    public init(name: Token, type: TypeAnnotation?, expr: Expression) {
+    public init(name: Token, mut: Token? = nil, type: TypeAnnotation? = nil, expr: Expression) {
         self.name = name
+        self.mut = mut
         self.type = type
         self.expr = expr
     }

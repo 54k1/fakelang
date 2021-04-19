@@ -1,3 +1,5 @@
+import struct scanner.Token
+
 public class TypedASTNode {
     public let type: Type
 
@@ -7,7 +9,10 @@ public class TypedASTNode {
 }
 
 public class Expression: TypedASTNode {
-    override init(_ type: Type) {
+    public let token: Token
+
+    init(_ type: Type, _ token: Token) {
+        self.token = token
         super.init(type)
     }
 
@@ -28,7 +33,7 @@ public class BinaryExpression: Expression {
         self.lhs = lhs
         self.rhs = rhs
         self.op = op
-        super.init(type)
+        super.init(type, lhs.token)
     }
 
     override public func accept<Visitor: ExpressionVisitor>(_ visitor: Visitor)
@@ -41,9 +46,9 @@ public class BinaryExpression: Expression {
 public class StringLiteralExpression: Expression {
     public let literal: String
 
-    public init(_ literal: String) {
+    public init(_ literal: String, _ token: Token) {
         self.literal = literal
-        super.init(.string)
+        super.init(.string, token)
     }
 
     override public func accept<Visitor: ExpressionVisitor>(_ visitor: Visitor)
@@ -56,9 +61,9 @@ public class StringLiteralExpression: Expression {
 public class IntegerLiteralExpression: Expression {
     public let literal: Int
 
-    public init(_ literal: Int) {
+    public init(_ literal: Int, _ token: Token) {
         self.literal = literal
-        super.init(.integer)
+        super.init(.integer, token)
     }
 
     override public func accept<Visitor: ExpressionVisitor>(_ visitor: Visitor)
@@ -71,9 +76,9 @@ public class IntegerLiteralExpression: Expression {
 public class IdentifierExpression: Expression {
     public let identifier: String
 
-    public init(_ identifier: String, type: Type) {
-        self.identifier = identifier
-        super.init(type)
+    public init(_ token: Token, type: Type) {
+        self.identifier = token.lexeme!
+        super.init(type, token)
     }
 
     override public func accept<Visitor: ExpressionVisitor>(_ visitor: Visitor)

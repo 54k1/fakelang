@@ -20,9 +20,9 @@ public class Interpreter {
 extension Interpreter {
     public func eval(stmt: Statement) -> InterpreterResult {
         switch stmt {
-        case let .let(decl):
+        case .let(let decl):
             return eval(letDecl: decl)
-        case let .expression(expr):
+        case .expression(let expr):
             return eval(expr: expr)
         }
     }

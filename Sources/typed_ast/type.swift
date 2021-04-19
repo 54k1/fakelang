@@ -1,4 +1,6 @@
-public enum Type {
+public enum Type: String {
     // Literal
-    case integer, string, unit
+    case integer = "Int"
+    case string = "Str"
+    case unit = "Unit"
 }

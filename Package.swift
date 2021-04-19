@@ -21,7 +21,7 @@ let package = Package(
         ),
         .target(
             name: "typed_ast",
-            dependencies: []
+            dependencies: ["scanner", "parser"]
         ),
         .target(
             name: "analyser",
@@ -29,11 +29,11 @@ let package = Package(
         ),
         .target(
             name: "common",
-            dependencies: ["typed_ast"]
+            dependencies: []
         ),
         .target(
             name: "interpreter",
-            dependencies: ["common", "parser", "value"]
+            dependencies: ["common", "parser", "value", "typed_ast"]
         ),
         .target(
             name: "scanner",

@@ -1,7 +1,7 @@
 extension Result {
     public var ok: Success! {
         switch self {
-        case let .success(ok):
+        case .success(let ok):
             return ok
         default:
             return nil
@@ -10,7 +10,7 @@ extension Result {
 
     public var err: Failure! {
         switch self {
-        case let .failure(err):
+        case .failure(let err):
             return err
         default:
             return nil

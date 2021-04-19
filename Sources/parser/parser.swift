@@ -158,6 +158,14 @@ extension Parser {
         guard consume(.let) != nil else {
             fatalError("expect let")
         }
+
+        let mut: Token? = {
+            if match(.mut) {
+                return consume(.mut)
+            }
+            return nil
+        }()
+
         guard let name = consume(.identifier) else {
             return .failure(.expected([.identifier]))
         }
@@ -185,7 +193,7 @@ extension Parser {
             return .failure(.expected([.semicolon]))
         }
 
-        return .success(.let(LetDeclaration(name: name, type: type, expr: expr)))
+        return .success(.let(LetDeclaration(name: name, mut: mut, type: type, expr: expr)))
     }
 }
 

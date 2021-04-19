@@ -1,4 +1,4 @@
-import scanner
+import struct scanner.Token
 
 public class TypeAnnotation {
     public let name: Token

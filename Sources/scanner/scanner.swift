@@ -46,7 +46,7 @@ public final class Scanner {
             return .success(makeToken(.equal))
         case "\"":
             return scanStringLiteral()
-        case let char:
+        default:
             if char.isNumber {
                 return scanNumber()
             } else if char.isLetter {
@@ -91,6 +91,7 @@ private let keywords: [String: TokenType] = [
     "let": .let,
     "fun": .fun,
     "return": .return,
+    "mut": .mut,
 ]
 
 // MARK: Utils
